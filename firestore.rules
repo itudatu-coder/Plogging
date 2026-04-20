@@ -1,0 +1,57 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 3. Primitive Definitions
+    function isValidId(id) { 
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); 
+    }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    
+    // 2. Validation Blueprints
+    function isValidMember(data) {
+      return data.keys().hasAll(['clubId', 'name', 'grade', 'class', 'number', 'gender']) &&
+             data.keys().size() == 6 &&
+             data.clubId is string && data.clubId.size() <= 50 &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 20 &&
+             data.grade is int && data.grade >= 1 && data.grade <= 3 &&
+             data.class is int && data.class >= 1 && data.class <= 20 &&
+             data.number is int && data.number >= 1 && data.number <= 50 &&
+             data.gender in ['남', '여'];
+    }
+
+    function isValidAttendance(data) {
+      return data.keys().hasAll(['memberId', 'clubId', 'date', 'status']) &&
+             data.keys().size() == 4 &&
+             data.memberId is string && data.memberId.size() <= 128 &&
+             data.clubId is string && data.clubId.size() <= 50 &&
+             data.date is string && data.date.matches('^\\d{4}-\\d{2}-\\d{2}$') &&
+             data.status in ['present', 'absent'];
+    }
+
+    // Collections
+    match /members/{memberId} {
+      allow read: if true;
+      allow create: if isValidId(memberId) && isValidMember(incoming());
+      allow update: if isValidMember(incoming()) && 
+                    incoming().diff(existing()).affectedKeys().hasOnly(['clubId', 'name', 'grade', 'class', 'number', 'gender']);
+      allow delete: if false; // Members shouldn't be deleted easily via client
+    }
+
+    match /attendance/{attendanceId} {
+      allow read: if true;
+      allow create: if isValidId(attendanceId) && isValidAttendance(incoming()) &&
+                    exists(/databases/$(database)/documents/members/$(incoming().memberId));
+      allow update: if isValidAttendance(incoming()) &&
+                    incoming().memberId == existing().memberId &&
+                    incoming().date == existing().date &&
+                    incoming().diff(existing()).affectedKeys().hasOnly(['status']);
+      allow delete: if true; // Allow toggling off attendance
+    }
+  }
+}

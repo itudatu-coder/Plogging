@@ -1,0 +1,6 @@
+{
+  "name": "플로깅 출석부",
+  "description": "플로깅 활동에 참여하는 부원들의 출석을 태블릿에서 터치 한 번으로 쉽고 빠르게 체크하고 관리하는 전용 어플리케이션입니다.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

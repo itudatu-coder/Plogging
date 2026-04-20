@@ -1,0 +1,40 @@
+{
+  "entities": {
+    "Member": {
+      "title": "부원 정보",
+      "description": "플로깅 부원의 인적 사항 및 소속 정보입니다.",
+      "type": "object",
+      "properties": {
+        "clubId": { "type": "string", "description": "소속 ID (예: plogging)" },
+        "name": { "type": "string", "description": "부원 이름" },
+        "grade": { "type": "integer", "minimum": 1, "maximum": 3, "description": "학년" },
+        "class": { "type": "integer", "minimum": 1, "maximum": 20, "description": "반" },
+        "number": { "type": "integer", "minimum": 1, "maximum": 50, "description": "번호" },
+        "gender": { "type": "string", "enum": ["남", "여"], "description": "성별" }
+      },
+      "required": ["clubId", "name", "grade", "class", "number", "gender"]
+    },
+    "Attendance": {
+      "title": "출석 기록",
+      "description": "특정 날짜의 부원별 출석 상태 기록입니다.",
+      "type": "object",
+      "properties": {
+        "memberId": { "type": "string", "description": "부원 문서 ID" },
+        "clubId": { "type": "string", "description": "소속 ID" },
+        "date": { "type": "string", "format": "date", "description": "출석 날짜 (YYYY-MM-DD)" },
+        "status": { "type": "string", "enum": ["present", "absent"], "description": "출석 상태" }
+      },
+      "required": ["memberId", "clubId", "date", "status"]
+    }
+  },
+  "firestore": {
+    "/members/{memberId}": {
+      "schema": "Member",
+      "description": "모든 플로깅 부원 목록 컬렉션입니다."
+    },
+    "/attendance/{attendanceId}": {
+      "schema": "Attendance",
+      "description": "일자별/부원별 출석 데이터 컬렉션입니다."
+    }
+  }
+}
